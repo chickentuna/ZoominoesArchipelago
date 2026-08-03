@@ -229,7 +229,7 @@ public class SlotSettings
     public static SlotSettings Defaults() => new SlotSettings
     {
         Goal = GoalKind.TierClear,
-        GoalTier = 6,
+        GoalTier = 7,
         GoalZookeepers = 3,
         McguffinRequired = 8,
         ApSlotsPerShop = 3,

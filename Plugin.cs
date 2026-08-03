@@ -59,7 +59,7 @@ public class Plugin : BaseUnityPlugin
                                   + "Archipelago items.", new AcceptableValueRange<int>(1, 7)));
         CheckedTiers = Config.Bind("Archipelago", "CheckedTiers", "1,2,3,4,5,6,7,8",
             "Offline fallback: which difficulty tiers carry shop and discover locations.");
-        GoalTier = Config.Bind("Archipelago", "GoalTier", 6,
+        GoalTier = Config.Bind("Archipelago", "GoalTier", 7,
             new ConfigDescription("Offline fallback: clearing a run on this tier or above "
                                   + "completes the goal.", new AcceptableValueRange<int>(1, 8)));
         DumpEntities = Config.Bind("Debug", "DumpEntities", false,

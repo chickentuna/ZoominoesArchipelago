@@ -14,7 +14,7 @@ public static class Filler
     public const string ExtraPlay = "Extra Play";
     public const string BonusHandSize = "Bonus Hand Size";
 
-    private const int GoldPerItem = 5;
+    private const int GoldPerItem = 1;
 
     private static readonly Dictionary<string, int> Counts = new Dictionary<string, int>
     {
