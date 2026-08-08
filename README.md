@@ -36,7 +36,7 @@ The panel opens by itself on launch until you connect.
 
 | | |
 |---|---|
-| Items | Animals, snacks, souvenirs, zookeepers, progressive difficulty tiers, plus bonus gold, extra plays and hand size |
+| Items | Animals, snacks, souvenirs, zookeepers, progressive difficulty tiers, plus extra starting gold, extra plays and hand size |
 | Locations | Gift Shop slots, each playable day, winning with each zookeeper, clearing each tier |
 | Goals | Clear a target tier, clear it with several zookeepers, or collect Zoo Tickets |
 

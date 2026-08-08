@@ -92,8 +92,10 @@ public class Plugin : BaseUnityPlugin
         if (DumpEntities.Value) EntityDump.Run();
 
         LocStrings.Init();
-        ApState.BuildStarterPool();
+        // Catalog first: the floor is named by AP item name once a seed picks it, and
+        // resolving those names is the catalog's job.
         ItemCatalog.Build();
+        ApState.BuildStarterPool();
         ApState.Init();
         if (ApState.Active) ApState.VerifyPoolViable();
 

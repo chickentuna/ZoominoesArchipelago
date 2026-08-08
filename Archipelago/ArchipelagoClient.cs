@@ -226,6 +226,11 @@ public class SlotSettings
     /// forever, so a short goal shrinks the hunt instead of the game.
     public List<string> FreeItems = new List<string>();
 
+    /// What the seed opens with. Empty until a session is attached, which is what
+    /// makes ApState fall back to its own defaults.
+    public string StarterZookeeper = "";
+    public List<string> StarterUnlocks = new List<string>();
+
     public static SlotSettings Defaults() => new SlotSettings
     {
         Goal = GoalKind.TierClear,
@@ -260,6 +265,11 @@ public class SlotSettings
         if (slotData.TryGetValue("free_items", out var free) &&
             free is Newtonsoft.Json.Linq.JArray freeArray)
             settings.FreeItems = freeArray.Select(t => (string)t).ToList();
+        if (slotData.TryGetValue("starter_zookeeper", out var keeper))
+            settings.StarterZookeeper = Convert.ToString(keeper);
+        if (slotData.TryGetValue("starter_unlocks", out var starters) &&
+            starters is Newtonsoft.Json.Linq.JArray starterArray)
+            settings.StarterUnlocks = starterArray.Select(t => (string)t).ToList();
 
         return settings;
     }

@@ -10,7 +10,7 @@ namespace ZoominoesArchipelago;
 /// save of their own.
 public static class Filler
 {
-    public const string BonusGold = "Bonus Gold";
+    public const string ExtraStartingGold = "Extra Starting Gold";
     public const string ExtraPlay = "Extra Play";
     public const string BonusHandSize = "Bonus Hand Size";
 
@@ -18,7 +18,7 @@ public static class Filler
 
     private static readonly Dictionary<string, int> Counts = new Dictionary<string, int>
     {
-        { BonusGold, 0 }, { ExtraPlay, 0 }, { BonusHandSize, 0 },
+        { ExtraStartingGold, 0 }, { ExtraPlay, 0 }, { BonusHandSize, 0 },
     };
 
     public static bool IsFiller(string itemName) => Counts.ContainsKey(itemName);
@@ -51,7 +51,7 @@ public static class Filler
 
         var plays = Counts[ExtraPlay];
         var hand = Counts[BonusHandSize];
-        var gold = Counts[BonusGold] * GoldPerItem;
+        var gold = Counts[ExtraStartingGold] * GoldPerItem;
         if (plays == 0 && hand == 0 && gold == 0) return;
 
         game.Plays += plays;
@@ -76,7 +76,7 @@ public static class Filler
 
         switch (itemName)
         {
-            case BonusGold:
+            case ExtraStartingGold:
                 game.Gold += GoldPerItem;
                 break;
             case ExtraPlay:

@@ -18,8 +18,10 @@ public static class WinPatch
         if (!RunMode.ApplyToCurrentRunLogged("win")) return;
 
         var zookeeper = game.Zookeeper?.Data;
-        if (zookeeper != null)
-            ApState.SendCheck(Locations.ZookeeperWin(zookeeper.name));
+        if (zookeeper != null && ItemCatalog.TryResolveName(zookeeper, out var keeperName))
+            ApState.SendCheck(Locations.ZookeeperWin(keeperName));
+        else if (zookeeper != null)
+            Plugin.Logger.LogWarning($"No Archipelago name for zookeeper '{zookeeper.name}'");
 
         var tier = Locations.CurrentTier();
         if (tier < 0) return;

@@ -72,11 +72,19 @@ public static class ApState
         McguffinCount = 0;
         Filler.Reset();
 
+        // The seed decides its own starting set, so the floor built at startup from
+        // the defaults is wrong the moment a session attaches.
+        BuildStarterPool();
+
         Plugin.Logger.LogInfo(
             $"Session adopted — {alreadyChecked?.Count() ?? 0} locations already checked server-side");
     }
 
-    public static void ReleaseSession() => client = null;
+    public static void ReleaseSession()
+    {
+        client = null;
+        BuildStarterPool();
+    }
 
     // ---- items ----------------------------------------------------------
 
@@ -95,9 +103,6 @@ public static class ApState
         if (data == null) return false;
         return Unlocked.Contains(data.id) || StarterPool.Contains(data.id);
     }
-
-    public static bool IsInStarterPool(EntityData data) =>
-        data != null && StarterPool.Contains(data.id);
 
     /// Routes an incoming Archipelago item to whatever it unlocks.
     public static void ReceiveItem(string itemName)
@@ -271,30 +276,71 @@ public static class ApState
     /// unlocked regardless of what the multiworld has granted.
     private static readonly HashSet<string> StarterPool = new HashSet<string>();
 
+    /// Rebuilt on connect as well as at startup: which entities the floor holds is
+    /// the seed's to decide once one is attached, and only the defaults are known
+    /// before that.
     public static void BuildStarterPool()
     {
         StarterPool.Clear();
         var gameData = ScriptableSingleton<GameData>.Instance;
 
+        // Never rolled out of the pool, never Archipelago items: the pool-driven deck
+        // generators (RandomStartersWithAbilities, Chally) draw Starter tiles
+        // directly, and Gem treasures are the Gift Shop's own gem slot.
+        AddFloor("Tile", Rarity.Starter, 99);
+        AddFloor("Treasure", Rarity.Gem, 99);
+
+        var settings = Active ? Settings : null;
+        var seeded = AddSeedStarters(settings);
+
         // At least one zookeeper must stay unlocked. GameState's constructor picks a
         // random hero from the unlocked ones when LastHero is out of range, and
         // RandomFromList over an empty list throws.
-        if (gameData.Heroes.Count > 0) StarterPool.Add(gameData.Heroes[0].id);
+        if (!seeded && gameData.Heroes.Count > 0) StarterPool.Add(gameData.Heroes[0].id);
 
         // Rarity floors: enough of each type that a roll always has somewhere to
-        // land. Starter tiles are the basic animals the pool-driven deck generators
-        // (RandomStartersWithAbilities, Chally) draw from, so they stay wholesale.
-        AddFloor("Tile", Rarity.Starter, 99);
-        AddFloor("Tile", Rarity.Common, 6);
-        AddFloor("Spell", Rarity.Common, 4);
-        AddFloor("Treasure", Rarity.Common, 4);
-        AddFloor("Treasure", Rarity.Gem, 99);
+        // land. Mirrors STARTER_UNLOCK_COUNTS in the apworld's constants.py, which is
+        // what a randomised set is drawn to.
+        if (!seeded)
+        {
+            AddFloor("Tile", Rarity.Common, 6);
+            AddFloor("Spell", Rarity.Common, 4);
+            AddFloor("Treasure", Rarity.Common, 4);
+        }
 
         // Heroes' StartingTiles/Treasures/Spells are dealt straight from HeroData
         // rather than rolled out of the pool, so they deliberately aren't floored —
         // granting a zookeeper is enough to make their deck work.
 
-        Plugin.Logger.LogInfo($"Starter pool floor: {StarterPool.Count} entities always available");
+        Plugin.Logger.LogInfo(
+            $"Starter pool floor: {StarterPool.Count} entities always available"
+            + (seeded ? $" (seed's set, zookeeper {settings.StarterZookeeper})" : " (defaults)"));
+    }
+
+    /// The seed names its starting set by AP item name; anything that fails to
+    /// resolve is left to the default floor rather than quietly shrinking it.
+    private static bool AddSeedStarters(SlotSettings settings)
+    {
+        if (settings == null || string.IsNullOrEmpty(settings.StarterZookeeper)) return false;
+
+        var resolved = new List<string>();
+        foreach (var name in new[] { settings.StarterZookeeper }.Concat(settings.StarterUnlocks))
+        {
+            if (ItemCatalog.TryResolve(name, out var entity)) resolved.Add(entity.id);
+            else Plugin.Logger.LogWarning($"Starter '{name}' matched no entity");
+        }
+
+        var expected = 1 + settings.StarterUnlocks.Count;
+        if (resolved.Count != expected)
+        {
+            Plugin.Logger.LogError(
+                $"Only {resolved.Count} of {expected} starters resolved — falling back to "
+                + "the default floor, which does not match what the seed placed");
+            return false;
+        }
+
+        foreach (var id in resolved) StarterPool.Add(id);
+        return true;
     }
 
     /// RollEntityData's rarity walk is Common -> Uncommon -> Rare -> Mythical -> Gem

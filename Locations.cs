@@ -69,8 +69,8 @@ public static class Locations
     public static string Discover(int tier, int levelIndex) =>
         $"Tier {tier + 1} - Discover Day {levelIndex + 1}";
 
-    public static string ZookeeperWin(string zookeeperAssetName) =>
-        $"Win - {zookeeperAssetName}";
+    public static string ZookeeperWin(string zookeeperItemName) =>
+        $"Win - {zookeeperItemName}";
 
     public static string TierClear(int tier) =>
         $"Clear - Tier {tier + 1}";

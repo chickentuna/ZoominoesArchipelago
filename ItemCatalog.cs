@@ -28,10 +28,22 @@ public static class ItemCatalog
     private static readonly Rarity[] ItemRarities =
         { Rarity.Common, Rarity.Uncommon, Rarity.Rare, Rarity.Mythical };
 
+    private static readonly Dictionary<string, string> NameById =
+        new Dictionary<string, string>();
+
     public static int Count => ByItemName.Count;
 
     public static bool TryResolve(string itemName, out EntityData data) =>
         ByItemName.TryGetValue(itemName, out data);
+
+    /// The name the world knows this entity by. Location names are built from it too,
+    /// so a zookeeper's asset name — "Reed" where the world says "Madame Reed" — never
+    /// reaches the server.
+    public static bool TryResolveName(EntityData data, out string itemName)
+    {
+        itemName = null;
+        return data != null && NameById.TryGetValue(data.id, out itemName);
+    }
 
     /// Filler items have no entity of their own, so borrow the art from the vanilla
     /// souvenir that does the same thing — Busy Bee is +1 play, Playing Cards is
@@ -40,7 +52,7 @@ public static class ItemCatalog
     private static readonly Dictionary<string, string> FillerIcons =
         new Dictionary<string, string>
         {
-            { Filler.BonusGold, "Piggy Bank" },
+            { Filler.ExtraStartingGold, "Piggy Bank" },
             { Filler.ExtraPlay, "Busy Bee" },
             { Filler.BonusHandSize, "Playing Cards" },
         };
@@ -61,6 +73,7 @@ public static class ItemCatalog
     public static void Build()
     {
         ByItemName.Clear();
+        NameById.Clear();
 
         // The world's names are English. Force en_US while reading them so a player
         // running the game in another language still resolves the same strings.
@@ -99,10 +112,10 @@ public static class ItemCatalog
                 // challenge runs, which the mod stays out of entirely.
                 if (pair.Key == "Hero" && entity.Rarity != Rarity.Common) continue;
 
-                // Anything in the safety floor is always unlocked, so it is not an
-                // item — that includes Marina, the starting zookeeper.
-                if (ApState.IsInStarterPool(entity)) continue;
-
+                // The starting set is not skipped. A seed that randomises its
+                // starters puts the ones it didn't draw into the pool, so every name
+                // has to resolve — and resolving the floor is how ApState finds the
+                // entities the seed named.
                 candidates.Add((pair.Value, entity));
             }
         }
@@ -119,7 +132,10 @@ public static class ItemCatalog
             var itemName = nameCounts[display] > 1 ? $"{display} ({label})" : display;
 
             if (!ByItemName.ContainsKey(itemName))
+            {
                 ByItemName[itemName] = data;
+                NameById[data.id] = itemName;
+            }
             else
                 Plugin.Logger.LogWarning($"Duplicate AP item name '{itemName}' — ignoring");
         }
