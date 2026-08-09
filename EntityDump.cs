@@ -25,7 +25,7 @@ public static class EntityDump
         try
         {
             var sb = new StringBuilder();
-            sb.AppendLine("category\tid\tassetName\tnameKey\trarity\tcost\tpoints\tunlockTriggers");
+            sb.AppendLine("category\tid\tassetName\tnameKey\trarity\tcost\tpoints\tunlockTriggers\tsubtype\tcolors");
 
             var total = 0;
             foreach (var category in Categories)
@@ -39,8 +39,14 @@ public static class EntityDump
                     var triggers = e.UnlockTriggers == null
                         ? ""
                         : string.Join(",", e.UnlockTriggers.Select(t => t.triggerType.ToString()));
+                    var tile = e as TileData;
+                    var subtype = tile != null ? tile.Subtype.ToString() : "";
+                    var colors = tile?.PossibleColors == null
+                        ? ""
+                        : string.Join(",", tile.PossibleColors.Select(c => c.ToString()));
                     sb.AppendLine(
-                        $"{category}\t{e.id}\t{e.name}\t{e.Name}\t{e.Rarity}\t{e.Cost}\t{e.Points}\t{triggers}");
+                        $"{category}\t{e.id}\t{e.name}\t{e.Name}\t{e.Rarity}\t{e.Cost}\t{e.Points}\t{triggers}"
+                        + $"\t{subtype}\t{colors}");
                 }
             }
 
