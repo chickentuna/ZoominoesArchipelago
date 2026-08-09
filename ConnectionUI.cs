@@ -13,7 +13,11 @@ public class ConnectionUI : MonoBehaviour
 
     private static readonly Vector2 Size = new Vector2(360f, 260f);
 
-    private Rect window = new Rect(40f, 40f, Size.x, Size.y);
+    /// Clear of the landing screen's top-left buttons: IMGUI draws over uGUI without
+    /// swallowing the click, so a panel sitting on one of them presses it too.
+    private const float TopMargin = 280f;
+
+    private Rect window = new Rect(40f, TopMargin, Size.x, Size.y);
     private bool visible;
     private bool autoShown;
     private string status = "";
@@ -26,6 +30,10 @@ public class ConnectionUI : MonoBehaviour
 
     private void Awake()
     {
+        // Short screens can't afford the full margin without pushing the panel off
+        // the bottom edge.
+        window.y = Mathf.Min(TopMargin, Mathf.Max(40f, Screen.height - Size.y - 40f));
+
         host = Plugin.Host.Value;
         port = Plugin.Port.Value.ToString();
         slot = Plugin.SlotName.Value;

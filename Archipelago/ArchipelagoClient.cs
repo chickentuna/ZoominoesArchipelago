@@ -62,8 +62,8 @@ public class ArchipelagoClient
             // This has to happen before the item stream is attached. Subscribing first
             // lets the server's replay arrive on a network thread while AdoptSession is
             // still zeroing counters on this one, which silently eats whatever landed
-            // in between — it cost an Extra Play on the first reconnect.
-            ApState.AdoptSession(this, session.Locations.AllLocationsChecked);
+            // in between.
+            ApState.AdoptSession(this, CheckedLocationNames());
             ApState.GrantFreeContent(Settings.FreeItems);
 
             session.Items.ItemReceived += OnItemReceived;
@@ -72,6 +72,7 @@ public class ArchipelagoClient
 
             // Drain anything the helper queued before we subscribed.
             OnItemReceived(session.Items);
+            Filler.EndReplay();
 
             ScoutShopLocations();
             return null;
@@ -80,6 +81,16 @@ public class ArchipelagoClient
         {
             session = null;
             return ex.Message;
+        }
+    }
+
+    /// The server tracks checks by id; everything above this layer works in names.
+    private IEnumerable<string> CheckedLocationNames()
+    {
+        foreach (var id in session.Locations.AllLocationsChecked)
+        {
+            var name = session.Locations.GetLocationNameFromId(id, GameName);
+            if (!string.IsNullOrEmpty(name)) yield return name;
         }
     }
 

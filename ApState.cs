@@ -60,7 +60,7 @@ public static class ApState
 
     // ---- session lifecycle ----------------------------------------------
 
-    public static void AdoptSession(ArchipelagoClient session, IEnumerable<long> alreadyChecked)
+    public static void AdoptSession(ArchipelagoClient session, IEnumerable<string> alreadyChecked)
     {
         client = session;
 
@@ -72,12 +72,16 @@ public static class ApState
         McguffinCount = 0;
         Filler.Reset();
 
+        // Restored from the server, which the shop reads to leave a slot it has
+        // already sold as ordinary stock.
+        if (alreadyChecked != null)
+            foreach (var location in alreadyChecked) Checked.Add(location);
+
         // The seed decides its own starting set, so the floor built at startup from
         // the defaults is wrong the moment a session attaches.
         BuildStarterPool();
 
-        Plugin.Logger.LogInfo(
-            $"Session adopted — {alreadyChecked?.Count() ?? 0} locations already checked server-side");
+        Plugin.Logger.LogInfo($"Session adopted — restored {Checked.Count} checked locations");
     }
 
     public static void ReleaseSession()

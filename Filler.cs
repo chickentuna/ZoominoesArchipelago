@@ -10,24 +10,44 @@ namespace ZoominoesArchipelago;
 /// save of their own.
 public static class Filler
 {
-    public const string ExtraStartingGold = "Extra Starting Gold";
-    public const string ExtraPlay = "Extra Play";
-    public const string BonusHandSize = "Bonus Hand Size";
+    public const string PermaGold = "Perma +1 Gold";
+    public const string PermaPlay = "Perma +1 Play";
+    public const string PermaHandSize = "Perma +1 Hand Size";
 
     private const int GoldPerItem = 1;
 
     private static readonly Dictionary<string, int> Counts = new Dictionary<string, int>
     {
-        { ExtraStartingGold, 0 }, { ExtraPlay, 0 }, { BonusHandSize, 0 },
+        { PermaGold, 0 }, { PermaPlay, 0 }, { PermaHandSize, 0 },
     };
 
     public static bool IsFiller(string itemName) => Counts.ContainsKey(itemName);
+
+    /// True while the server is replaying the item history a connect asks for.
+    ///
+    /// A replayed item is counted but not applied. GameState.PrepareForSave writes
+    /// Plays, HandSize and Gold into the run's save, so a run that has had the stack
+    /// still carries it, and one that hasn't takes the whole lot from ApplyRunStart.
+    private static bool replaying;
 
     /// Wiped when a session is adopted — the server replays the whole item history,
     /// so counting on top of stale numbers would inflate them on every reconnect.
     public static void Reset()
     {
         foreach (var key in new List<string>(Counts.Keys)) Counts[key] = 0;
+        replaying = true;
+    }
+
+    /// Called once the connect-time replay has drained. Anything after this is a live
+    /// send, and applies to the run in progress.
+    public static void EndReplay()
+    {
+        if (!replaying) return;
+        replaying = false;
+        Plugin.Logger.LogInfo(
+            $"[ap] filler stack from history — {Counts[PermaGold]} gold, "
+            + $"{Counts[PermaPlay]} plays, {Counts[PermaHandSize]} hand size; "
+            + "applies from the next run");
     }
 
     public static bool Receive(string itemName)
@@ -35,7 +55,7 @@ public static class Filler
         if (!IsFiller(itemName)) return false;
 
         Counts[itemName]++;
-        ApplyOne(itemName);
+        if (!replaying) ApplyOne(itemName);
         return true;
     }
 
@@ -49,9 +69,9 @@ public static class Filler
     {
         if (game == null) return;
 
-        var plays = Counts[ExtraPlay];
-        var hand = Counts[BonusHandSize];
-        var gold = Counts[ExtraStartingGold] * GoldPerItem;
+        var plays = Counts[PermaPlay];
+        var hand = Counts[PermaHandSize];
+        var gold = Counts[PermaGold] * GoldPerItem;
         if (plays == 0 && hand == 0 && gold == 0) return;
 
         game.Plays += plays;
@@ -76,17 +96,17 @@ public static class Filler
 
         switch (itemName)
         {
-            case ExtraStartingGold:
+            case PermaGold:
                 game.Gold += GoldPerItem;
                 break;
-            case ExtraPlay:
+            case PermaPlay:
                 // Plays is the per-day allowance; PlaysRemaining is just today's
                 // counter, reset from Plays each morning. Bumping both means the
                 // extra play lands now *and* on every following day.
                 game.Plays += 1;
                 game.PlaysRemaining += 1;
                 break;
-            case BonusHandSize:
+            case PermaHandSize:
                 game.HandSize += 1;
                 break;
         }

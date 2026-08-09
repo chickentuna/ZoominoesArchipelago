@@ -50,10 +50,10 @@ public static class ItemToast
     {
         Sprite sprite = null;
         var rarity = Rarity.Rare;
-        if (itemName != null && ItemCatalog.TryResolveIcon(itemName, out var real))
+        if (itemName != null && ItemCatalog.TryResolveArt(itemName, out var art, out var found))
         {
-            sprite = real.Sprite;
-            rarity = real.Rarity;
+            sprite = art;
+            rarity = found;
         }
 
         var location = "toast" + Pending.Count;
