@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Code;
 using HarmonyLib;
 
@@ -48,6 +49,40 @@ public static class UnlockGatePatch
 
         Plugin.Logger.LogInfo($"[gate] suppressed vanilla unlock: {entityData.name}");
         return false;
+    }
+
+    /// Winning a run still runs the vanilla difficulty unlock, which announces a tier
+    /// by name. The ceiling it tries to raise is blocked below, so the announcement
+    /// names a tier the player has not got — the multiworld hands those out, and
+    /// receiving one already produces its own toast.
+    ///
+    /// Only the announcement is dropped: CollectionManager.IsEntityUnlocked answers
+    /// for a difficulty out of unlockedEntities, so the grant itself still has to run
+    /// or the collection would report every tier locked.
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(AnimationsController), nameof(AnimationsController.ShowUnlock))]
+    public static bool ShowUnlock_Prefix(EntityData entityData)
+    {
+        if (!RunMode.ApplyToPools || !(entityData is DifficultyData)) return true;
+
+        Plugin.Logger.LogInfo($"[gate] suppressed vanilla unlock toast: {entityData.name}");
+        return false;
+    }
+
+    /// The landing page announces the same unlock a second time: LandingLoader reads
+    /// this list on load and pops an UnlockView for each entry. UnlockEntity has to
+    /// keep running for difficulties, so the id lands here regardless of the stinger
+    /// being dropped.
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(CollectionManager), nameof(CollectionManager.GetAndClearNewUnlocks))]
+    public static void GetAndClearNewUnlocks_Postfix(ref List<string> __result)
+    {
+        if (!RunMode.ApplyToPools || __result == null) return;
+
+        var difficulties = ScriptableSingleton<GameData>.Instance.Difficulties;
+        var dropped = __result.RemoveAll(id => difficulties.Exists(d => d.id == id));
+        if (dropped > 0)
+            Plugin.Logger.LogInfo($"[gate] suppressed {dropped} vanilla difficulty unlock splash");
     }
 
     /// Difficulties are a single int ceiling rather than entries in the unlocked
