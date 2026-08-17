@@ -66,6 +66,26 @@ public static class Locations
     public static string ShopSlot(int tier, int shopVisit, int ordinal) =>
         $"Tier {tier + 1} - Shop {shopVisit} - Slot {ordinal + 1}";
 
+    /// Every location a tier carries, in the shape the seed actually generated: a tier
+    /// outside checked_tiers has only its Clear, and discover days vanish when the
+    /// option is off.
+    public static IEnumerable<string> ForTier(int tier)
+    {
+        if (IsCheckedTier(tier))
+        {
+            for (var shop = 1; shop <= ShopDays.Length; shop++)
+                for (var ordinal = 0; ordinal < ApState.Settings.ApSlotsPerShop; ordinal++)
+                    yield return ShopSlot(tier, shop, ordinal);
+
+            if (ApState.Settings.DiscoverChecks)
+                for (var day = 1; day < FinalDay; day++)
+                    if (IsDiscoverDay(day - 1))
+                        yield return Discover(tier, day - 1);
+        }
+
+        yield return TierClear(tier);
+    }
+
     /// A shop slot names the item on its card before you buy it, which the other
     /// location kinds have no equivalent of.
     public static bool IsShopSlot(string location) =>

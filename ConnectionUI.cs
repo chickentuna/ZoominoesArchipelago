@@ -84,7 +84,7 @@ public class ConnectionUI : MonoBehaviour
         if (connected)
         {
             var settings = ApState.Settings;
-            GUILayout.Label($"Connected — goal {settings.Goal}, tier {settings.GoalTier}");
+            GUILayout.Label("Connected — " + Goal(settings));
 
             // The only goal whose progress isn't legible from the game itself.
             if (settings.Goal == SlotSettings.GoalKind.McguffinHunt)
@@ -101,6 +101,21 @@ public class ConnectionUI : MonoBehaviour
 
         GUILayout.Label($"Toggle with {Plugin.ConnectionUIKey.Value}");
         GUI.DragWindow(new Rect(0f, 0f, Size.x, 20f));
+    }
+
+    /// Spelled out per goal because a McGuffin Hunt ignores the goal tier entirely —
+    /// printing both made it read as two win conditions at once.
+    private static string Goal(SlotSettings settings)
+    {
+        switch (settings.Goal)
+        {
+            case SlotSettings.GoalKind.McguffinHunt:
+                return "hunting Zoo Tickets";
+            case SlotSettings.GoalKind.ZookeeperClears:
+                return $"clear tier {settings.GoalTier} with {settings.GoalZookeepers} zookeepers";
+            default:
+                return $"clear tier {settings.GoalTier}";
+        }
     }
 
     private static string LabelledField(string label, string value)
