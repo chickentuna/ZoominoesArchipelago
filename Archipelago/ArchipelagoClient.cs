@@ -194,17 +194,26 @@ public class ArchipelagoClient
     /// locally, so a self-send arrives as one message instead of a send plus a
     /// receive.
     ///
-    /// Only things arriving for us. Sending someone else's item needs no toast — the
-    /// shop card already named it before it was bought.
+    /// Anything arriving for us, and anything we send onward — finishing a day or a
+    /// run hands an item over with nothing on screen to say so. A shop slot is the
+    /// exception: its card named the item before it was bought.
     private static void OnMessage(LogMessage message)
     {
-        if (!(message is ItemSendLogMessage send) || !send.IsReceiverTheActivePlayer) return;
+        if (!(message is ItemSendLogMessage send)) return;
 
-        var text = send.IsSenderTheActivePlayer
-            ? $"Found\n{send.Item.ItemName}"
-            : $"Received {send.Item.ItemName}\nfrom {send.Sender.Alias}";
+        if (send.IsReceiverTheActivePlayer)
+        {
+            var text = send.IsSenderTheActivePlayer
+                ? $"Found\n{send.Item.ItemName}"
+                : $"Received {send.Item.ItemName}\nfrom {send.Sender.Alias}";
+            ItemToast.Enqueue(text, send.Item.ItemName);
+            return;
+        }
 
-        ItemToast.Enqueue(text, send.Item.ItemName);
+        if (!send.IsSenderTheActivePlayer) return;
+        if (Locations.IsShopSlot(send.Item.LocationName)) return;
+
+        ItemToast.Enqueue($"Sent {send.Item.ItemName}\nto {send.Receiver.Alias}", send.Item.ItemName);
     }
 
     private static void OnSocketClosed(string reason)

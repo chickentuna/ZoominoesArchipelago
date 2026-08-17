@@ -66,6 +66,11 @@ public static class Locations
     public static string ShopSlot(int tier, int shopVisit, int ordinal) =>
         $"Tier {tier + 1} - Shop {shopVisit} - Slot {ordinal + 1}";
 
+    /// A shop slot names the item on its card before you buy it, which the other
+    /// location kinds have no equivalent of.
+    public static bool IsShopSlot(string location) =>
+        !string.IsNullOrEmpty(location) && location.Contains(" - Shop ");
+
     public static string Discover(int tier, int levelIndex) =>
         $"Tier {tier + 1} - Discover Day {levelIndex + 1}";
 
