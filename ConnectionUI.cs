@@ -1,4 +1,5 @@
 using UnityEngine;
+using ZoominoesArchipelago.Archipelago;
 
 namespace ZoominoesArchipelago;
 
@@ -84,6 +85,11 @@ public class ConnectionUI : MonoBehaviour
         {
             var settings = ApState.Settings;
             GUILayout.Label($"Connected — goal {settings.Goal}, tier {settings.GoalTier}");
+
+            // The only goal whose progress isn't legible from the game itself.
+            if (settings.Goal == SlotSettings.GoalKind.McguffinHunt)
+                GUILayout.Label(
+                    $"Zoo Tickets {ApState.McguffinCount}/{settings.McguffinRequired}");
         }
         else if (status.Length > 0)
         {

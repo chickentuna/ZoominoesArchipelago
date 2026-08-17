@@ -21,6 +21,11 @@ public static class LocStrings
     /// to do something that no longer unlocks anything.
     public const string NotReceived = "ap.collection.notreceived";
 
+    /// The lock keeps the vanilla stock for one more roll. Injection re-stamps the
+    /// Archipelago slots afterwards, so locking neither preserves nor removes them —
+    /// worth saying on the button, since the shelf gives no hint either way.
+    public const string ShopLockTooltip = "shopview.lockbutton.Tooltip";
+
     private static readonly Dictionary<string, string> Ours = new Dictionary<string, string>();
 
     private static Dictionary<string, string> GameDb() =>
@@ -45,5 +50,7 @@ public static class LocStrings
     public static void Init()
     {
         Put(NotReceived, "Not received yet.");
+        Put(ShopLockTooltip,
+            "Save everything in the shop for next time. Archipelago slots are unaffected.");
     }
 }
