@@ -118,6 +118,7 @@ public class Plugin : BaseUnityPlugin
 
     private void Update()
     {
+        ApProfile.PumpProfileChanged();
         if (ApState.Active) ItemToast.Pump();
     }
 }
