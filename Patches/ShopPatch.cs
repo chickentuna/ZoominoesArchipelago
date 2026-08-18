@@ -78,6 +78,27 @@ public static class ShopPatch
         }
     }
 
+    /// How far into debt the shop will let you go.
+    ///
+    /// The field moved from Shop onto GameState, so it is resolved by name at runtime
+    /// rather than compiled against either layout — one build of the mod then works on
+    /// game versions either side of that move.
+    private static readonly System.Reflection.FieldInfo ShopMaxDebt =
+        AccessTools.Field(typeof(Shop), "MaxDebt");
+
+    private static readonly System.Reflection.FieldInfo StateMaxDebt =
+        AccessTools.Field(typeof(GameState), "MaxDebt");
+
+    private static int MaxDebt(Shop shop, GameController game)
+    {
+        if (ShopMaxDebt != null) return (int)ShopMaxDebt.GetValue(shop);
+        if (StateMaxDebt != null && game.GameState != null)
+            return (int)StateMaxDebt.GetValue(game.GameState);
+
+        Plugin.Logger.LogWarning("No MaxDebt field found — treating the shop as debt-free");
+        return 0;
+    }
+
     /// Deterministic per shop visit, so a slot keeps its identity across rerolls and
     /// across sessions, but different shops don't always use the same positions.
     private static List<int> ApSlotsFor(int visit, int slotCount)
@@ -109,7 +130,7 @@ public static class ShopPatch
         if (!ApEntityFactory.IsApItem(entity)) return true;
 
         var game = GameController.Instance;
-        if (game.Gold < entity.Cost - __instance.MaxDebt) return false;
+        if (game.Gold < entity.Cost - MaxDebt(__instance, game)) return false;
         if (!__instance.ForSale.Contains(entity)) return false;
 
         game.Gold = MathUtil.SafeSubtract(game.Gold, entity.Cost);
