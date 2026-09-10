@@ -219,6 +219,9 @@ public class ArchipelagoClient
     /// exception: its card named the item before it was bought.
     private static void OnMessage(LogMessage message)
     {
+        // HintItemSendLogMessage derives from ItemSendLogMessage, so a hint naming an
+        // item of ours would otherwise toast as though we had just received it.
+        if (message is HintItemSendLogMessage) return;
         if (!(message is ItemSendLogMessage send)) return;
 
         if (send.IsReceiverTheActivePlayer)
