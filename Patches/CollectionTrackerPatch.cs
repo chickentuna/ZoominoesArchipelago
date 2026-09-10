@@ -32,6 +32,16 @@ public static class CollectionTrackerPatch
     public static void IsEntityCollected_Postfix(EntityData entityData, ref bool __result)
     {
         if (__result) return;
+
+        // Shop placeholders are not collection content, and the id is never in
+        // collectedEntities, so every AP slot would otherwise draw the not-collected
+        // question mark and hide its scouted name behind the unknown-item tooltip.
+        if (ApEntityFactory.IsApId(entityData?.id))
+        {
+            __result = true;
+            return;
+        }
+
         if (!RunMode.ApplyToPools) return;
         if (!ApState.IsApManagedType(entityData)) return;
 
