@@ -26,6 +26,15 @@ public static class LocStrings
     /// the button promises nothing about them rather than guessing.
     public const string ShopLockTooltip = "shopview.lockbutton.Tooltip";
 
+    /// The tooltip's rarity line on an Archipelago slot, naming what the multiworld
+    /// item is rather than what the stand-in entity was built from. Kept short: the
+    /// line sits on a fixed-width backer.
+    public const string RarityProgression = "ap.rarity.progression";
+    public const string RarityProgressionUseful = "ap.rarity.progression.useful";
+    public const string RarityUseful = "ap.rarity.useful";
+    public const string RarityTrap = "ap.rarity.trap";
+    public const string RarityFiller = "ap.rarity.filler";
+
     private static readonly Dictionary<string, string> Ours = new Dictionary<string, string>();
 
     private static Dictionary<string, string> GameDb() =>
@@ -52,5 +61,11 @@ public static class LocStrings
         Put(NotReceived, "Not received yet.");
         Put(ShopLockTooltip,
             "Save everything in the shop for next time. Archipelago slots may still change.");
+
+        Put(RarityProgression, "Progression");
+        Put(RarityProgressionUseful, "Progression+");
+        Put(RarityUseful, "Useful");
+        Put(RarityTrap, "Trap");
+        Put(RarityFiller, "Normal");
     }
 }

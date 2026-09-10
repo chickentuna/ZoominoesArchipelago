@@ -46,6 +46,22 @@ public static class ScoutCache
             ? $"for {entry.Receiver}"
             : "";
 
+    /// The Archipelago classification, for the tooltip's rarity line. Null when the
+    /// scout hasn't landed, which leaves the vanilla rarity word in place.
+    public static string LabelFor(string location)
+    {
+        if (!ByLocation.TryGetValue(location, out var entry)) return null;
+
+        var advancement = (entry.Flags & ItemFlags.Advancement) != 0;
+        var useful = (entry.Flags & ItemFlags.NeverExclude) != 0;
+
+        if (advancement && useful) return LocStrings.RarityProgressionUseful;
+        if (advancement) return LocStrings.RarityProgression;
+        if (useful) return LocStrings.RarityUseful;
+        if ((entry.Flags & ItemFlags.Trap) != 0) return LocStrings.RarityTrap;
+        return LocStrings.RarityFiller;
+    }
+
     /// Borrows the game's rarity tiers to signal importance, so a shelf can be read
     /// at a glance: mythic backing means progression, rare means useful.
     public static Rarity RarityFor(string location)
