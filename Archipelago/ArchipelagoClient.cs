@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
 using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.Enums;
 using Archipelago.MultiClient.Net.Helpers;
@@ -65,6 +67,7 @@ public class ArchipelagoClient
             // in between.
             ApState.AdoptSession(this, CheckedLocationNames());
             ApState.GrantFreeContent(Settings.FreeItems);
+            ApState.GrantContentUnknownToSeed(RoomItemNames());
 
             session.Items.ItemReceived += OnItemReceived;
             session.MessageLog.OnMessageReceived += OnMessage;
@@ -81,6 +84,53 @@ public class ArchipelagoClient
         {
             session = null;
             return ex.Message;
+        }
+    }
+
+    /// Every item name the room's data package holds for this game, which is the
+    /// item table of whatever version of the world rolled the seed. Reached by
+    /// reflection: the session exposes id-to-name resolution but not the table
+    /// itself. Null when any hop fails, which leaves the gate exactly as it was.
+    private HashSet<string> RoomItemNames()
+    {
+        try
+        {
+            var resolver = AccessTools.Field(session.Items.GetType(), "itemInfoResolver")
+                ?.GetValue(session.Items);
+            var cache = resolver == null
+                ? null
+                : AccessTools.Field(resolver.GetType(), "cache")?.GetValue(resolver);
+            var tryGet = cache == null
+                ? null
+                : AccessTools.Method(cache.GetType(), "TryGetGameDataFromCache");
+            if (tryGet == null)
+            {
+                Plugin.Logger.LogWarning(
+                    "Could not reach the room's item table — content added by a newer "
+                    + "game build stays gated");
+                return null;
+            }
+
+            var args = new object[] { GameName, null };
+            if (!(bool)tryGet.Invoke(cache, args) || args[1] == null) return null;
+
+            var items = AccessTools.Property(args[1].GetType(), "Items")?.GetValue(args[1]);
+            var byName = items == null
+                ? null
+                : AccessTools.Field(items.GetType(), "bToA")?.GetValue(items) as IDictionary;
+            if (byName == null) return null;
+
+            var names = new HashSet<string>();
+            foreach (var key in byName.Keys)
+            {
+                if (key is string name) names.Add(name);
+            }
+            return names;
+        }
+        catch (Exception ex)
+        {
+            Plugin.Logger.LogWarning($"Could not read the room's item table: {ex.Message}");
+            return null;
         }
     }
 

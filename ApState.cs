@@ -162,6 +162,27 @@ public static class ApState
             Plugin.Logger.LogWarning($"{unknown} free-item names did not resolve to entities");
     }
 
+    /// Content the game has but the connected seed's world never heard of, because
+    /// the game added it after that seed was rolled. Nothing can ever send these, so
+    /// gating them would put them out of reach for the rest of the seed.
+    public static void GrantContentUnknownToSeed(ICollection<string> roomItemNames)
+    {
+        if (roomItemNames == null || roomItemNames.Count == 0) return;
+
+        var granted = new List<string>();
+        foreach (var name in ItemCatalog.ItemNames)
+        {
+            if (roomItemNames.Contains(name)) continue;
+            if (!ItemCatalog.TryResolve(name, out var entity)) continue;
+            if (Unlocked.Add(entity.id)) granted.Add(name);
+        }
+
+        if (granted.Count > 0)
+            Plugin.Logger.LogInfo(
+                $"Unlocked {granted.Count} {(granted.Count == 1 ? "entity" : "entities")} "
+                + $"this seed's world does not know: {string.Join(", ", granted.ToArray())}");
+    }
+
     public static void GrantEntity(string id, string displayName = null)
     {
         if (!Unlocked.Add(id)) return;

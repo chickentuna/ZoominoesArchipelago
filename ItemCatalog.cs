@@ -33,6 +33,10 @@ public static class ItemCatalog
 
     public static int Count => ByItemName.Count;
 
+    /// Every item name the game's own data can produce, which is a superset of what
+    /// an older seed's world knows about.
+    public static IEnumerable<string> ItemNames => ByItemName.Keys;
+
     public static bool TryResolve(string itemName, out EntityData data) =>
         ByItemName.TryGetValue(itemName, out data);
 
