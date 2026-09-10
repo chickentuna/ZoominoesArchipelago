@@ -18,9 +18,30 @@ public static class ShopPatch
     private static readonly AccessTools.FieldRef<Shop, List<ShopItem>> ShopItemsRef =
         AccessTools.FieldRefAccess<Shop, List<ShopItem>>("shopItems");
 
+    /// The vanilla entity each AP slot displaced, by location. Read back when the run
+    /// is saved: AP entities are created at runtime, so Easy Save cannot resolve them
+    /// on load and the shelf would come back holding nulls. Entries are only ever
+    /// looked up for slots the current shop just injected, so old ones are inert.
+    private static readonly Dictionary<string, Entity> Displaced = new Dictionary<string, Entity>();
+
+    public static Entity VanillaFor(Entity apItem)
+    {
+        var location = ApEntityFactory.LocationOf(apItem);
+        if (location == null) return null;
+        return Displaced.TryGetValue(location, out var replaced) ? replaced : null;
+    }
+
     [HarmonyPostfix]
     [HarmonyPatch(nameof(Shop.Roll))]
-    public static void Roll_Postfix(Shop __instance)
+    public static void Roll_Postfix(Shop __instance) => Inject(__instance);
+
+    /// A resumed run rebuilds the shelf from the save, which holds the vanilla stock,
+    /// so the same slots are substituted again rather than restored.
+    [HarmonyPostfix]
+    [HarmonyPatch(nameof(Shop.Load))]
+    public static void Load_Postfix(Shop __instance) => Inject(__instance);
+
+    private static void Inject(Shop __instance)
     {
         if (!RunMode.ApplyToCurrentRunLogged("shop")) return;
 
@@ -53,6 +74,7 @@ public static class ShopPatch
                 location, null, replaced.Cost, asSpell, ScoutCache.RarityFor(location));
 
             forSale[slot] = apItem;
+            Displaced[location] = replaced;
             ApState.HintLocation(location);
 
             // Setup instantiates a fresh EntityView under ViewParent without removing

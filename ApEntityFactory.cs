@@ -20,8 +20,10 @@ public static class ApEntityFactory
 
     public static bool IsApId(string id) => id != null && id.StartsWith(IdPrefix);
 
-    public static string LocationOf(Entity entity) =>
-        IsApItem(entity) ? entity.Data.id.Substring(IdPrefix.Length) : null;
+    public static string LocationOf(Entity entity) => LocationOfId(entity?.Data?.id);
+
+    public static string LocationOfId(string id) =>
+        IsApId(id) ? id.Substring(IdPrefix.Length) : null;
 
     /// <param name="asSpell">Snack slots and souvenir slots live under different
     /// layout parents, and Shop picks the parent from the entity's type. Keeping the
