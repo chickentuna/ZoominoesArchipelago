@@ -189,6 +189,11 @@ public static class ApState
 
     public static bool IsChecked(string location) => Checked.Contains(location);
 
+    public static void HintLocation(string location)
+    {
+        if (client?.Connected == true) client.HintLocation(location);
+    }
+
     public static void SendCheck(string location)
     {
         if (!Checked.Add(location)) return;

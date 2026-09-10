@@ -127,6 +127,26 @@ public class ArchipelagoClient
         session.Locations.CompleteLocationChecks(id);
     }
 
+    /// Hints the item on the shelf, free of hint points, so the room learns what
+    /// this slot holds at the same moment the player does. Rerolling calls this again
+    /// for the same location; the server keeps one hint per location and says nothing
+    /// the second time.
+    public void HintLocation(string locationName)
+    {
+        if (!Connected) return;
+        var id = session.Locations.GetLocationIdFromName(GameName, locationName);
+        if (id <= 0) return;
+
+        session.Locations
+            .ScoutLocationsAsync(HintCreationPolicy.CreateAndAnnounce, id)
+            .ContinueWith(task =>
+            {
+                if (task.IsFaulted)
+                    Plugin.Logger.LogWarning(
+                        $"Hint for {locationName} failed: {task.Exception?.GetBaseException().Message}");
+            });
+    }
+
     public void SendGoal()
     {
         if (Connected) session.SetGoalAchieved();

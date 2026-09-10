@@ -53,6 +53,7 @@ public static class ShopPatch
                 location, null, replaced.Cost, asSpell, ScoutCache.RarityFor(location));
 
             forSale[slot] = apItem;
+            ApState.HintLocation(location);
 
             // Setup instantiates a fresh EntityView under ViewParent without removing
             // the previous one, so re-running it stacks the replaced item's art
