@@ -102,6 +102,12 @@ public static class ApState
     public static bool IsApManagedType(EntityData data) =>
         data is TileData || data is SpellData || data is TreasureData || data is HeroData;
 
+    /// Content the multiworld can actually send. Summon-only tokens such as Hydra Head
+    /// share a managed type but sit outside the catalog, so gating them would lock
+    /// pieces nothing can ever unlock.
+    public static bool IsGatedContent(EntityData data) =>
+        IsApManagedType(data) && ItemCatalog.TryResolveName(data, out _);
+
     public static bool IsUnlocked(EntityData data)
     {
         if (data == null) return false;

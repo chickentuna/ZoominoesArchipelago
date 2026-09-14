@@ -30,7 +30,7 @@ public static class UnlockGatePatch
             return;
         }
 
-        if (!ApState.IsApManagedType(entityData)) return;
+        if (!ApState.IsGatedContent(entityData)) return;
         __result = ApState.IsUnlocked(entityData);
     }
 

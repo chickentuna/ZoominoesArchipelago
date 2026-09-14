@@ -56,7 +56,7 @@ public static class CollectionTrackerPatch
     public static void UnlockText_Postfix(Entity __instance, ref string __result)
     {
         if (!RunMode.ApplyToPools) return;
-        if (!ApState.IsApManagedType(__instance?.Data)) return;
+        if (!ApState.IsGatedContent(__instance?.Data)) return;
 
         __result = LocStrings.NotReceived;
     }
