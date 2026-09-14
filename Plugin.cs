@@ -14,7 +14,7 @@ public class Plugin : BaseUnityPlugin
 {
     public const string GUID = "com.jpn.zoominoes.archipelago";
     public const string NAME = "Zoominoes Archipelago";
-    public const string VERSION = "0.1.1";
+    public const string VERSION = "0.1.2";
 
     public static Plugin Instance { get; private set; }
 
